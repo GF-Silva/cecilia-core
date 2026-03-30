@@ -1,27 +1,17 @@
-import google.generativeai as genai
-import json
+from groq import Groq
 
-genai.configure(api_key="AIzaSyD2Ha-DCccWwu1BHyRfvNfwYTmXO1NKW3c")
+client = Groq(
+    api_key="***REMOVIDO***"
+)
 
-model = genai.GenerativeModel("gemini-2.5-flash")
+chat_completion = client.chat.completions.create(
+    messages=[
+        {
+            "role": "user",
+            "content": "Explain the importance of fast language models",
+        }
+    ],
+    model="openai/gpt-oss-120b",
+)
 
-prompt = """
-Responda APENAS em JSON no formato:
-{
-  "acao": "...",
-  "parametros": {}
-}
-
-Texto: "toca música do Eminem"
-"""
-
-response = model.generate_content(prompt)
-
-texto = response.text
-
-print(texto)
-
-# tentar converter pra JSON
-data = json.loads(texto)
-
-print(data["acao"])
+print(chat_completion.choices[0].message.content)
