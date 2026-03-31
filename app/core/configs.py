@@ -1,3 +1,3 @@
-CLIENT_CONFIG = {
-    "api_key": "AIzaSyD2Ha-DCccWwu1BHyRfvNfwYTmXO1NKW3c"
+llm_params = {
+    "llm_model": "openai/gpt-oss-120b",
 }

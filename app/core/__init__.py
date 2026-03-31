@@ -1,4 +1,3 @@
-from .configs import CLIENT_CONFIG
-from .gen_engine import GenEngine
+from .assistant import Assistant
 
-gen_engine = GenEngine(CLIENT_CONFIG)
+assistant = Assistant()

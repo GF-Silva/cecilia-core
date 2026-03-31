@@ -5,6 +5,8 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "fastapi>=0.135.2",
-    "groq>=1.1.2",
+    "fastapi[standard]>=0.135.2",
+    "groq[aiohttp]>=1.1.2",
+    "pydantic>=2.12.5",
+    "python-dotenv>=1.2.2",
 ]
