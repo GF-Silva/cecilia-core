@@ -1,12 +1,13 @@
-from .llm_engine import LLMEngine, EngineInput
-from .configs import llm_params
+from .groq.stt import STT
+from .groq.llm import LLM
 
 class Assistant:
     def __init__(self):
-        self.llm = LLMEngine(EngineInput(**llm_params))
-        self.audio_reecorder = None
-        self.speaker = None
-        self.transcriber = None
+        self.llm = LLM()
+        self.stt = STT()
 
     async def send_prompt(self, compose):
         return await self.llm.process_prompt(compose)
+
+    async def transcribe(self, file: str):
+        return await self.stt.transcribe(file)

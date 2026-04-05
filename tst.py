@@ -1,59 +1,25 @@
 from groq import Groq
 
-client = Groq(api_key="***REMOVIDO***")
+client = Groq(api_key='***REMOVIDO***')
 
-def multi_turn_conversation():
-    # Initial conversation with system message and first user input
-    initial_messages = [
-        {
-            "role": "system",
-            "content": "You are a helpful AI assistant that provides detailed explanations about complex topics. Always provide comprehensive answers with examples and context."
-        },
-        {
-            "role": "user",
-            "content": "What is quantum computing?"
-        }
-    ]
-    
+speech_file_path = "orpheus-english.wav" 
+model = "canopylabs/orpheus-v1-english"
+voice = "troy"
+text = "Welcome to Orpheus text-to-speech. [cheerful] This is an example of high-quality English audio generation with vocal directions support."
+response_format = "wav"
 
-    # First request - creates cache for system message
-    first_response = client.chat.completions.create(
-        messages=initial_messages, # pyright: ignore[reportArgumentType]
-        model="openai/gpt-oss-120b"
-    )
+response = client.audio.speech.create(
+    model=model,
+    voice=voice,
+    input=text,
+    response_format=response_format
+)
 
-    # Continue conversation - system message and previous context will be cached
-    conversation_messages = [ # pyright: ignore[reportUnknownVariableType]
-        *initial_messages,
-        first_response.choices[0].message,
-        {
-            "role": "user",
-            "content": "Can you give me a simple example of how quantum superposition works?"
-        }
-    ]
+response.write_to_file(speech_file_path)
 
-    second_response = client.chat.completions.create(
-        messages=conversation_messages, # pyright: ignore[reportUnknownArgumentType]
-        model="openai/gpt-oss-120b"
-    )
 
-    # Continue with third turn
-    third_turn_messages = [ # pyright: ignore[reportUnknownVariableType]
-        *conversation_messages,
-        second_response.choices[0].message,
-        {
-            "role": "user",
-            "content": "How does this relate to quantum entanglement?"
-        }
-    ]
+import tempfile
+import os
 
-    third_response = client.chat.completions.create(
-        messages=third_turn_messages, # pyright: ignore[reportUnknownArgumentType]
-        model="openai/gpt-oss-120b"
-    )
-
-    print("Third response:", third_response.choices[0].message.content)
-    print("Usage:", third_response.usage)
-
-if __name__ == "__main__":
-    multi_turn_conversation()
+tmp = tempfile.mktemp(suffix=".wav", prefix="groq_")
+# ex: /tmp/groq_abc123.wav
