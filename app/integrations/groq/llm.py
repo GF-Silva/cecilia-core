@@ -1,4 +1,4 @@
-from app.core.groq.client import client
+from .client import client
 
 class LLM:
     def __init__(self):

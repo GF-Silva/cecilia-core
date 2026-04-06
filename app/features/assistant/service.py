@@ -1,5 +1,5 @@
-from .groq.stt import STT
-from .groq.llm import LLM
+from integrations.groq.stt import STT
+from integrations.groq.llm import LLM
 
 class Assistant:
     def __init__(self):
