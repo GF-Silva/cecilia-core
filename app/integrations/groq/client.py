@@ -1,10 +1,9 @@
 from dotenv import load_dotenv
-from groq import AsyncGroq, DefaultAioHttpClient
+from groq import AsyncGroq
 import os
 
 load_dotenv()
 
 client = AsyncGroq(
-    api_key=os.getenv("GROQ_API_KEY"),
-    http_client=DefaultAioHttpClient()
+    api_key=os.getenv("GROQ_API_KEY")
 )

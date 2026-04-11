@@ -7,14 +7,12 @@ requires-python = ">=3.14"
 dependencies = [
     "fastapi[standard]>=0.115.0",
     "groq[aiohttp]>=1.1.2",
-    "openwakeword>=0.4.0",
-    "pydantic>=2.12.5",
+    "numpy>=2.4.3",
     "python-dotenv>=1.2.2",
-    "setuptools>=82.0.1",
+    "setuptools>=70.2.0",
     "silero-vad>=6.2.1",
     "sounddevice>=0.5.5",
     "soundfile>=0.13.1",
-    "torch>=2.10.0",
 ]
 [tool.uv.sources]
 torch = { index = "pytorch-cpu" }

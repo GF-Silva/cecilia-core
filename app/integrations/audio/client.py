@@ -7,4 +7,3 @@ SAMPLE_RATE = 16000
 CHUNK_SIZE = 1280  # 80ms
 
 recorder = Recorder(SAMPLE_RATE, FRAME_SIZE)
-vad = VAD()
