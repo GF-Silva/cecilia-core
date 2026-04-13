@@ -1,3 +1,3 @@
-from .service import Assistant
+from .brain import Assistant
 
 assistant = Assistant()
