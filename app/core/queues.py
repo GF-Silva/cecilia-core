@@ -1,4 +1,4 @@
 import asyncio
 
-audio_queue = asyncio.Queue()
-text_queue = asyncio.Queue()
+transcription_queue = asyncio.Queue()
+response_queue = asyncio.Queue()

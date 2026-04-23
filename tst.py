@@ -1,25 +1,30 @@
-import asyncio
+import azure.cognitiveservices.speech as speechsdk
 
-# fila compartilhada entre produtor e consumidor
-queue = asyncio.Queue()
+speech_config = speechsdk.SpeechConfig(
+    subscription="***REMOVIDO***",
+    region="brazilsouth"
+)
 
-async def produtor():
-    for i in range(5):
-        await asyncio.sleep(1)  # simula trabalho (ex: chamada de API)
-        await queue.put(i)      # coloca o valor na fila
-        print(f"produziu: {i}")
+speech_config.speech_recognition_language = "pt-BR"
 
-async def consumidor():
-    while True:
-        dado = await queue.get()  # trava aqui até ter algo na fila
-        print(f"consumiu: {dado}")
-        queue.task_done()         # marca o item como processado
+synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
 
-async def main():
-    # roda produtor e consumidor ao mesmo tempo
-    await asyncio.gather(
-        produtor(),
-        consumidor()
-    )
+def on_started(evt):
+    print("🔊 TTS iniciado")
 
-asyncio.run(main())  # inicia o event loop
+def on_completed(evt):
+    print("✅ TTS concluído")
+
+def on_word_boundary(evt):
+    print(f"Palavra: {evt.text}")
+
+synthesizer.synthesis_started.connect(on_started)
+synthesizer.synthesis_completed.connect(on_completed)
+synthesizer.synthesis_word_boundary.connect(on_word_boundary)
+
+# não bloqueia
+synthesizer.speak_text_async("Olá, eu sou o Suavio.")
+
+# seu app continua aqui
+while True:
+    pass

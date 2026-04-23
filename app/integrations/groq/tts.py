@@ -1,6 +1,4 @@
-from groq import Groq
-
-client = Groq(api_key='***REMOVIDO***')
+from .client import client
 
 speech_file_path = "orpheus-english.wav" 
 model = "canopylabs/orpheus-v1-english"
@@ -16,3 +14,10 @@ response = client.audio.speech.create(
 )
 
 response.write_to_file(speech_file_path)
+
+class TTS:
+    def __init__(self):
+        pass
+
+    async def process_response(self):
+        pass
