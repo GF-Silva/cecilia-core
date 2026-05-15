@@ -1,7 +1,9 @@
 from .client import client
-from core.queues import transcription_queue, response_queue
+from core.queues import transcription_queue, llm_stream_queue
+from core.events import llm_running, llm_responding
 from groq.types.chat import ChatCompletionMessageParam
 import asyncio
+import re
 
 class LLM:
     def __init__(self):
@@ -11,16 +13,18 @@ class LLM:
         self.system_prompt = "Respond in Brazilian Portuguese. Be concise, like a natural conversation — 1 to 3 sentences unless more detail is asked. Never use markdown formatting like *, **, #, or similar characters."
         self.context: list[ChatCompletionMessageParam] = []
         self.max_context = 10
+        self.punctuation_regex = r'[.!?;:,—\-]|\.{3}'
 
     async def run(self):
-        while True:
+        llm_running.set() # Define que comecou
+
+        # Enquanto estiver rodando, consome as transcription
+        while llm_running.is_set():
             text = await transcription_queue.get()
-            response = await self.process_prompt(text)
-            print(f"{self.print_prefix} - Resposta: {response}")
-            await response_queue.put(response)
+            await self.stream_completion(contents=text, queue=llm_stream_queue)
             transcription_queue.task_done()
-    
-    async def process_prompt(self, contents):
+
+    async def stream_completion(self, queue: asyncio.Queue[str], contents: str):
         self.context.append({
             "role": "user",
             "content": contents
@@ -30,15 +34,38 @@ class LLM:
             {"role": "system", "content": self.system_prompt},
             *self.context[-self.max_context:] # Pega só os ultimos itens do context
         ]
-        
-        chat_completion = await self.llm_client.chat.completions.create(
+
+        stream = await client.chat.completions.create(
             messages=messages,
             model=self.llm_model,
+            stream=True,
         )
 
+        response = ""
+        stream_buffer = ""
+        first_chunk = True
+        async for chunk in stream:
+            content = chunk.choices[0].delta.content
+            if first_chunk: first_chunk = False; llm_responding.set()
+
+            if not content or not isinstance(content, str): continue
+            
+            if re.fullmatch(self.punctuation_regex, content):
+                stream_buffer += content
+                await queue.put(stream_buffer)
+                stream_buffer = ""
+                continue
+            
+            stream_buffer += content
+            response += content
+        
+        llm_responding.clear()
+        await queue.put("[END]")
         self.context.append({
             "role": "assistant",
-            "content": chat_completion.choices[0].message.content
+            "content": response
         })
 
-        return chat_completion.choices[0].message.content
+        print(f"{self.print_prefix} - Response: {response}")
+
+        return response

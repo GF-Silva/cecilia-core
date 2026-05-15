@@ -1,30 +1,38 @@
 import azure.cognitiveservices.speech as speechsdk
+import re
 
+# ─── 1. CONFIGURAÇÃO ──────────────────────────────────────────────────────────
 speech_config = speechsdk.SpeechConfig(
-    subscription="***REMOVIDO***",
-    region="brazilsouth"
+    endpoint=f"wss://eastus.tts.speech.microsoft.com/cognitiveservices/websocket/v2",
+    subscription="***REMOVIDO***"
 )
-
-speech_config.speech_recognition_language = "pt-BR"
+speech_config.speech_synthesis_voice_name = "pt-BR-Macerio:DragonHDLatestNeural"
 
 synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
 
-def on_started(evt):
-    print("🔊 TTS iniciado")
+# ─── 2. CRIAR O REQUEST ───────────────────────────────────────────────────────
+tts_request = speechsdk.SpeechSynthesisRequest(
+    input_type=speechsdk.SpeechSynthesisRequestInputType.TextStream
+)
 
-def on_completed(evt):
-    print("✅ TTS concluído")
+tts_task = synthesizer.speak_async(tts_request)
 
-def on_word_boundary(evt):
-    print(f"Palavra: {evt.text}")
+text = "Oi, como posso te ajudar?"
+text_tokens = ['Tudo', ' bem', ',', ' e', ' você', '?', ' Como', ' posso', ' ajudar', '?']
+punctuation_marks = r'[.!?;:,—\-]|\.{3}'
 
-synthesizer.synthesis_started.connect(on_started)
-synthesizer.synthesis_completed.connect(on_completed)
-synthesizer.synthesis_word_boundary.connect(on_word_boundary)
+buffer = ""
+for chunk in text_tokens: # Simula a chegada de chunk
+    if re.fullmatch(punctuation_marks, chunk):
+        buffer += chunk
+        print(buffer, end="\n", flush=True)
+        tts_request.input_stream.write(buffer)
+        buffer = ""
+    else:
+        buffer += chunk
 
-# não bloqueia
-synthesizer.speak_text_async("Olá, eu sou o Suavio.")
+# ─── 4. FECHAR E AGUARDAR ─────────────────────────────────────────────────────
+tts_request.input_stream.close()
+tts_task.get()
 
-# seu app continua aqui
-while True:
-    pass
+# print("\nPronto!")

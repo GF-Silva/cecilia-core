@@ -1,4 +1,4 @@
-import asyncio
+from asyncio import Queue
 
-transcription_queue = asyncio.Queue()
-response_queue = asyncio.Queue()
+transcription_queue: Queue[str] = Queue()
+llm_stream_queue: Queue[str] = Queue()
