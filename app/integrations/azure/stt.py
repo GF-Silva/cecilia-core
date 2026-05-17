@@ -1,5 +1,4 @@
 import azure.cognitiveservices.speech as speechsdk
-import azure.cognitiveservices.speech.audio as speechsdk_audio
 from .configs import stt_config
 from core.queues import transcription_queue
 from core.events import stt_started, stt_stopped
@@ -30,7 +29,7 @@ class STT:
         stt_started.set() # Define q o stt comecou
     
     def on_speech_start(self, evt):
-        print("Voz detectada")
+        print(f"{self.print_prefix} - Voz detectada")
 
     def on_recognized(self, evt: speechsdk.SpeechRecognitionEventArgs):
         if not evt.result.text: return

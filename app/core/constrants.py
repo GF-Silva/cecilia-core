@@ -1,0 +1,1 @@
+LLM_STOP_SIGNAL = object()

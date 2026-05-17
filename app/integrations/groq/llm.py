@@ -2,6 +2,7 @@ from .client import client
 from core.queues import transcription_queue, llm_stream_queue
 from core.events import llm_running, llm_responding
 from groq.types.chat import ChatCompletionMessageParam
+from core.constrants import LLM_STOP_SIGNAL
 import asyncio
 import re
 
@@ -24,48 +25,51 @@ class LLM:
             await self.stream_completion(contents=text, queue=llm_stream_queue)
             transcription_queue.task_done()
 
-    async def stream_completion(self, queue: asyncio.Queue[str], contents: str):
-        self.context.append({
-            "role": "user",
-            "content": contents
-        })
+    async def stream_completion(self, queue: asyncio.Queue, contents: str):
+        try:
+            self.context.append({
+                "role": "user",
+                "content": contents
+            })
 
-        messages: list[ChatCompletionMessageParam] = [
-            {"role": "system", "content": self.system_prompt},
-            *self.context[-self.max_context:] # Pega só os ultimos itens do context
-        ]
+            messages: list[ChatCompletionMessageParam] = [
+                {"role": "system", "content": self.system_prompt},
+                *self.context[-self.max_context:] # Pega só os ultimos itens do context
+            ]
 
-        stream = await client.chat.completions.create(
-            messages=messages,
-            model=self.llm_model,
-            stream=True,
-        )
+            stream = await client.chat.completions.create(
+                messages=messages,
+                model=self.llm_model,
+                stream=True,
+            )
 
-        response = ""
-        stream_buffer = ""
-        first_chunk = True
-        async for chunk in stream:
-            content = chunk.choices[0].delta.content
-            if first_chunk: first_chunk = False; llm_responding.set()
+            response = ""
+            stream_buffer = ""
+            first_chunk = True
+            async for chunk in stream:
+                content = chunk.choices[0].delta.content
+                if first_chunk: first_chunk = False; llm_responding.set()
 
-            if not content or not isinstance(content, str): continue
-            
-            if re.fullmatch(self.punctuation_regex, content):
+                if not content or not isinstance(content, str): continue
+                
+                if re.fullmatch(self.punctuation_regex, content):
+                    stream_buffer += content
+                    await queue.put(stream_buffer)
+                    stream_buffer = ""
+                    continue
+                
                 stream_buffer += content
-                await queue.put(stream_buffer)
-                stream_buffer = ""
-                continue
+                response += content
             
-            stream_buffer += content
-            response += content
+            llm_responding.clear()
+            await queue.put(LLM_STOP_SIGNAL)
+            self.context.append({
+                "role": "assistant",
+                "content": response
+            })
+
+            print(f"{self.print_prefix} - Response: {response}")
+            return response
         
-        llm_responding.clear()
-        await queue.put("[END]")
-        self.context.append({
-            "role": "assistant",
-            "content": response
-        })
-
-        print(f"{self.print_prefix} - Response: {response}")
-
-        return response
+        except Exception as e:
+            print(f"{self.print_prefix} - Erro: {e}")
