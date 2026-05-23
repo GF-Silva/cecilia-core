@@ -1,7 +1,7 @@
 from asyncio import Event
 
-stt_started: Event = Event()
-stt_stopped: Event = Event()
-llm_running: Event = Event()
-llm_responding: Event = Event()
-tts_running: Event = Event()
+stt_started = Event()
+stt_stopped = Event()
+llm_running = Event()
+llm_responding = Event()
+tts_running = Event()
